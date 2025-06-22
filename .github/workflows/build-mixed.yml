@@ -32,8 +32,12 @@ jobs:
                   git push --tags
 
             - name: Build solution with MSBuild
+                shell: pwsh
               run: |
-                  "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe" "`"Financial Tracker.sln`"" /p:Configuration=Release
+                Start-Process -FilePath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe" `
+                  -ArgumentList '"Financial Tracker.sln"', '/p:Configuration=Release' `
+                  -Wait -NoNewWindow
+
 
             - name: Publish C# app
               run: dotnet publish FInancialTrackerGUI/FInancialTrackerGUI.csproj -c Release -r win-x64 --self-contained true -o ./publish
