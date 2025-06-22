@@ -1,0 +1,45 @@
+name: Build WinForms App
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup .NET 8
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: '8.0.x'
+
+            - name: Restore dependencies
+              run: dotnet restore
+
+            - name: Build
+              run: dotnet build --configuration Release
+
+            - name: Publish
+              run: dotnet publish -c Release -r win-x64 --self-contained true -o publish
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: WinFormsApp
+                  path: publish
+
+            - name: Bump version and tag
+              run: |
+                  dotnet tool restore
+                  dotnet versionize
+                  git config user.name "github-actions"
+                  git config user.email "github-actions@github.com"
+                  git add .
+                  git commit -m "chore(release): bump version"
+                  git push
+                  git push --tags
