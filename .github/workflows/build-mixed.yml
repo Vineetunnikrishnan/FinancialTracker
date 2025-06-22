@@ -1,0 +1,45 @@
+name: Build and Version Mixed C++ and C# App
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: '8.0.x'
+
+            - name: Restore .NET tools
+              run: dotnet tool restore
+
+            - name: Run Versionize to bump version and tag
+              run: |
+                  dotnet versionize
+                  git config user.name "github-actions"
+                  git config user.email "github-actions@github.com"
+                  git add -A
+                  git commit -m "chore(release): bump version"
+                  git push
+                  git push --tags
+
+            - name: Build solution with MSBuild
+              run: |
+                  "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe" "Financial Tracker.sln" /p:Configuration=Release
+
+            - name: Publish C# app
+              run: dotnet publish FInancialTrackerGUI/FInancialTrackerGUI.csproj -c Release -r win-x64 --self-contained true -o ./publish
+
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: FinanceTracker-EXE
+                  path: ./publish
